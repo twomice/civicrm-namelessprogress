@@ -75,11 +75,15 @@ class CRM_Namelessprogress_Form_Settings extends CRM_Admin_Form_Setting {
       $value = $values[$fieldName];
       $month = $value['M'];
       $day = $value['d'];
+      if (empty($month) || empty($day)) {
+        $this->_errors[$fieldName] = E::ts('This date requires both month and day');
+        break;
+      }
       if ($day > $maxDaysPerMonth[$month]) {
         $this->_errors[$fieldName] = E::ts('This date is not acceptable in this context; please select an earlier day in the month.');
       }
     }
-    parent::validate();
+    return parent::validate();
   }
 
   public function postProcess() {
@@ -100,7 +104,7 @@ class CRM_Namelessprogress_Form_Settings extends CRM_Admin_Form_Setting {
     $elementNames = array();
     foreach ($this->_elements as $element) {
       $label = $element->getLabel();
-      if (!empty($label) && !CRM_Utils_Array::value('data-settings-custom', $element->_attributes)) {
+      if (!empty($label)) {
         $elementNames[] = $element->getName();
       }
     }
