@@ -156,15 +156,34 @@ function namelessprogress_civicrm_preProcess($formName, &$form) {
  * Implements hook_civicrm_navigationMenu().
  *
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_navigationMenu
- *
+ */
 function namelessprogress_civicrm_navigationMenu(&$menu) {
-  _namelessprogress_civix_insert_navigation_menu($menu, 'Mailings', array(
-    'label' => E::ts('New subliminal message'),
-    'name' => 'mailing_subliminal_message',
-    'url' => 'civicrm/mailing/subliminal',
-    'permission' => 'access CiviMail',
-    'operator' => 'OR',
-    'separator' => 0,
+  _namelessprogress_get_max_navID($menu, $max_navID);
+  _namelessprogress_civix_insert_navigation_menu($menu, 'Administer/Customize Data and Screens', array(
+    'label' => E::ts('Student Progress Settings'),
+    'name' => 'Student Progress Settings',
+    'url' => 'civicrm/admin/namelessprogress/settings?reset=1',
+    'permission' => 'administer CiviCRM',
+    'operator' => 'AND',
+    'separator' => NULL,
+    'navID' => ++$max_navID,
   ));
   _namelessprogress_civix_navigationMenu($menu);
-} // */
+}
+
+/**
+ * For an array of menu items, recursively get the value of the greatest navID
+ * attribute.
+ * @param <type> $menu
+ * @param <type> $max_navID
+ */
+function _namelessprogress_get_max_navID(&$menu, &$max_navID = NULL) {
+  foreach ($menu as $id => $item) {
+    if (!empty($item['attributes']['navID'])) {
+      $max_navID = max($max_navID, $item['attributes']['navID']);
+    }
+    if (!empty($item['child'])) {
+      _namelessprogress_get_max_navID($item['child'], $max_navID);
+    }
+  }
+}
