@@ -176,3 +176,46 @@ function _namelessprogress_get_max_navID(&$menu, &$max_navID = NULL) {
     }
   }
 }
+
+/**
+ * Implements hook_civicrm_ageprogress_alterIsDoUpdate().
+ *
+ * @link https://twomice.github.io/com.joineryhq.ageprogress/
+ */
+function namelessprogress_civicrm_ageprogress_alterIsDoUpdate(&$isDoUpdate) {
+  //  Define $completedMoveUpFullDate = value of "completedMoveUpFullDate" setting.
+  $completedMoveUpFullDate = civicrm_api3('Setting', 'getvalue', [
+    'name' => "namelessprogress_completedMoveUpFullDate",
+  ]);
+
+  // Define $dateMoveUpThisYear = value of setting "Move-up date", in the current year.
+  $moveupday = civicrm_api3('Setting', 'getvalue', [
+    'name' => "namelessprogress_moveupday",
+  ]);
+  $moveupday['M'];
+  $moveupday['d'];
+  $moveupDateParams = [
+    'month' => $moveupday['M'],
+    'day' => $moveupday['d'],
+    'year' => date('Y'),
+  ];
+  $dateMoveUpThisYear = CRM_Utils_Date::getToday($moveupDateParams);
+  //  If $dateMoveUpThisYear = $completedMoveUpFullDate:
+  if ($dateMoveUpThisYear == $completedMoveUpFullDate) {
+    //  This means we've already run the job for this year.
+    //  Therefore, return FALSE: perform no updates now.
+    $isDoUpdate = FALSE;
+  }
+
+  //  If today's date is NOT equal to or greater than $dateMoveUpThisYear:
+  elseif (strtotime(CRM_Utils_Date::getToday()) < strtotime($dateMoveUpThisYear)) {
+    //  This means it's not yet time to run the job for this year.
+    //  Therefore, return FALSE: perform no updates now.
+    $isDoUpdate = FALSE;
+  }
+  //  Otherwise, it means the Move Up process has not yet been done for this year, and it's time to do it.
+  else {
+    //  Therefore, return TRUE: perform updates now.
+    $isDoUpdate = TRUE;
+  }
+}

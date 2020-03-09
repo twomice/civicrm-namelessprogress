@@ -45,9 +45,24 @@ return [
     'is_contact' => 0,
     'description' => ts('When students\' "School Grade" field is updated, students who are calcluated at this age will be placed in Kindergarten, and higher grades will be incremented based on this starting point.'),
     'X_form_rules_args' => array(
-      array(E::ts('The field "Kindergarten Starting Age" is required.'), 'required'),
-      array(E::ts('The field "Kindergarten Starting Age" must be an integer.'), 'integer'),
+      [E::ts('The field "Kindergarten Starting Age" is required.'), 'required'],
+      [E::ts('The field "Kindergarten Starting Age" must be an integer.'), 'integer'],
     ),
+  ],
+  'namelessprogress_completedMoveUpFullDate' => [
+    'group_name' => 'namelessprogress',
+    'name' => 'namelessprogress_completedMoveUpFullDate',
+    'type' => 'Date',
+    'add' => '5.0',
+    // No title; this hides the settings field from the settings form, per
+    // CRM_Namelessprogress_Form_Settings::getRenderableElementNames().
+    'title' => '',
+    // These attributes are also meaningless for this hidden setting:
+    // 'quick_form_type' => 'Element',
+    // 'html_type' => 'text',
+    // 'default' => 5,
+    'is_domain' => 0,
+    'is_contact' => 0,
   ],
 
 ];
