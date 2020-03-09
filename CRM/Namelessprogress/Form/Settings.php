@@ -13,7 +13,7 @@ use CRM_Namelessprogress_ExtensionUtil as E;
  */
 class CRM_Namelessprogress_Form_Settings extends CRM_Admin_Form_Setting {
 
-  static $extensionName = 'namelessprogress';
+  private static $extensionName = 'namelessprogress';
   private $_settingsFields = array();
   public $_settings = array();
 
@@ -116,6 +116,7 @@ class CRM_Namelessprogress_Form_Settings extends CRM_Admin_Form_Setting {
       $this->_settingsFields = $settingsGetFields['values'];
     }
   }
+
   /**
    * Define the list of settings we are going to allow to be set on this form.
    */

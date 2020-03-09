@@ -6,7 +6,7 @@ use CRM_Namelessprogress_ExtensionUtil as E;
 /**
  * Implements hook_civicrm_config().
  *
- * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_config/ 
+ * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_config/
  */
 function namelessprogress_civicrm_config(&$config) {
   _namelessprogress_civix_civicrm_config($config);
@@ -140,17 +140,6 @@ function namelessprogress_civicrm_entityTypes(&$entityTypes) {
 function namelessprogress_civicrm_themes(&$themes) {
   _namelessprogress_civix_civicrm_themes($themes);
 }
-
-// --- Functions below this ship commented out. Uncomment as required. ---
-
-/**
- * Implements hook_civicrm_preProcess().
- *
- * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_preProcess
- *
-function namelessprogress_civicrm_preProcess($formName, &$form) {
-
-} // */
 
 /**
  * Implements hook_civicrm_navigationMenu().
