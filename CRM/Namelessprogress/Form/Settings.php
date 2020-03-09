@@ -54,6 +54,34 @@ class CRM_Namelessprogress_Form_Settings extends CRM_Admin_Form_Setting {
 
   }
 
+  public function validate() {
+    // Ensure date fields are useful dates (no leap day, no non-existent dates)
+    $maxDaysPerMonth = [
+      '1' => 31,
+      '2' => 28,
+      '3' => 31,
+      '4' => 30,
+      '5' => 31,
+      '6' => 30,
+      '7' => 31,
+      '8' => 31,
+      '9' => 30,
+      '10' => 31,
+      '11' => 30,
+      '12' => 31,
+    ];
+    $values = $this->exportValues();
+    foreach (['namelessprogress_moveupday', 'namelessprogress_schoolcutoffday'] as $fieldName) {
+      $value = $values[$fieldName];
+      $month = $value['M'];
+      $day = $value['d'];
+      if ($day > $maxDaysPerMonth[$month]) {
+        $this->_errors[$fieldName] = E::ts('This date is not acceptable in this context; please select an earlier day in the month.');
+      }
+    }
+    parent::validate();
+  }
+
   public function postProcess() {
     parent::postProcess();
     CRM_Utils_System::redirect(CRM_Utils_System::url('civicrm/admin/namelessprogress/settings', 'reset=1'));
