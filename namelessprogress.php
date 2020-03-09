@@ -178,6 +178,15 @@ function _namelessprogress_get_max_navID(&$menu, &$max_navID = NULL) {
 }
 
 /**
+ * Implements hook_civicrm_ageprogress_alterAgeCalcMethod().
+ *
+ * @link https://twomice.github.io/com.joineryhq.ageprogress/
+ */
+function namelessprogress_civicrm_ageprogress_alterAgeCalcMethod(&$callback) {
+  $callback = '_namelessprogress_calculateContactAge';
+}
+
+/**
  * Implements hook_civicrm_ageprogress_alterIsDoUpdate().
  *
  * @link https://twomice.github.io/com.joineryhq.ageprogress/
@@ -188,18 +197,8 @@ function namelessprogress_civicrm_ageprogress_alterIsDoUpdate(&$isDoUpdate) {
     'name' => "namelessprogress_completedMoveUpFullDate",
   ]);
 
-  // Define $dateMoveUpThisYear = value of setting "Move-up date", in the current year.
-  $moveupday = civicrm_api3('Setting', 'getvalue', [
-    'name' => "namelessprogress_moveupday",
-  ]);
-  $moveupday['M'];
-  $moveupday['d'];
-  $moveupDateParams = [
-    'month' => $moveupday['M'],
-    'day' => $moveupday['d'],
-    'year' => date('Y'),
-  ];
-  $dateMoveUpThisYear = CRM_Utils_Date::getToday($moveupDateParams);
+  $dateMoveUpThisYear = CRM_Namelessprogress_Util::getDateMoveUpThisYear();
+
   //  If $dateMoveUpThisYear = $completedMoveUpFullDate:
   if ($dateMoveUpThisYear == $completedMoveUpFullDate) {
     //  This means we've already run the job for this year.
@@ -218,4 +217,9 @@ function namelessprogress_civicrm_ageprogress_alterIsDoUpdate(&$isDoUpdate) {
     //  Therefore, return TRUE: perform updates now.
     $isDoUpdate = TRUE;
   }
+}
+
+function _namelessprogress_calculateContactAge($contact) {
+  $util = CRM_Namelessprogress_Util::singleton();
+  return $util->calculateAge($contact);
 }
