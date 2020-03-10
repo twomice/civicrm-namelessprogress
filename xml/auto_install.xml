@@ -4,10 +4,10 @@
   <CustomGroups>
     <CustomGroup>
       <name>Student_Progress</name>
-      <title>Student Progress (auto-calculated)</title>
+      <title>Student Progress</title>
       <extends>Individual</extends>
       <style>Inline</style>
-      <collapse_display>1</collapse_display>
+      <collapse_display>0</collapse_display>
       <help_pre></help_pre>
       <help_post></help_post>
       <weight>29</weight>
@@ -23,7 +23,7 @@
   <CustomFields>
     <CustomField>
       <name>School_grade</name>
-      <label>School grade</label>
+      <label>School grade (auto-calculated)</label>
       <data_type>Int</data_type>
       <html_type>Select</html_type>
       <default_value>-1</default_value>

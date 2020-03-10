@@ -11,9 +11,29 @@ class CRM_Namelessprogress_Upgrader extends CRM_Namelessprogress_Upgrader_Base {
 
   /**
    * Example: Run an external SQL script when the module is installed.
-   *
+   */
   public function install() {
-    $this->executeSqlFile('sql/myinstall.sql');
+    // Link option group for custom field 'school years advanced'
+    $customFieldId = CRM_Core_BAO_CustomField::getCustomFieldID('School_grade_years_advanced', 'Student_Progress');
+    $optionGroupId = civicrm_api3('optionGroup', 'getValue', [
+      'return' => 'id',
+      'name' => 'school_grade_years_advanced_20200309140330',
+    ]);
+    civicrm_api3('customField','create', [
+      'id' => $customFieldId,
+      'option_group_id' => $optionGroupId,
+    ]);
+
+    // Link option group for custom field 'school grade'
+    $customFieldId = CRM_Core_BAO_CustomField::getCustomFieldID('School_grade', 'Student_Progress');
+    $optionGroupId = civicrm_api3('optionGroup', 'getValue', [
+      'return' => 'id',
+      'name' => 'school_grade_20200309140121',
+    ]);
+    civicrm_api3('customField','create', [
+      'id' => $customFieldId,
+      'option_group_id' => $optionGroupId,
+    ]);
   }
 
   /**
