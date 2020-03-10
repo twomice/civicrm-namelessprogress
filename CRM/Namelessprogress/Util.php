@@ -99,4 +99,54 @@ class CRM_Namelessprogress_Util {
     return $dateMoveUpThisYear;
   }
 
+  /**
+   * For a given contact, calculate the correct School Grade.
+   * @param Array $contact as returned by Contact.getsingle API
+   * @return Integer
+   */
+  public static function calculateContactGrade($contact) {
+    $yearsAdvancedCustomFieldId = CRM_Core_BAO_CustomField::getCustomFieldID('School_grade_years_advanced', 'Student_Progress');
+    $util = self::singleton();
+    //  Define $kAge =  value of setting "Kindergarten starting age".
+    $kAge = civicrm_api3('Setting', 'getvalue', [
+      'name' => "namelessprogress_kstartage",
+    ]);
+
+    //  Calculate $age using our utils method.
+    $age = $util->calculateAge($contact);
+
+    //  Calculate and set the value of contact.schoolGrade with this process:
+    //  $grade = $age minus $kAge
+    $grade = $age - $kAge;
+
+    //  $grade = $grade + contact.schoolGradeYearsAdvanced
+    $yearsAdvanced = CRM_Utils_Array::value("custom_{$yearsAdvancedCustomFieldId}", $contact, NULL);
+    if (!isset($yearsAdvanced)) {
+      $customValue = civicrm_api3('CustomValue', 'getsingle', [
+        'return' => ["custom_{$yearsAdvancedCustomFieldId}"],
+        'entity_id' => CRM_Utils_Array::value("id", $contact, CRM_Utils_Array::value("contact_id", $contact)),
+      ]);
+      $yearsAdvanced = CRM_Utils_Array::value('latest', $customValue, 0);
+    }
+    $grade += $yearsAdvanced;
+
+    if ($grade < 0 || $grade > 12) {
+      // $grade is "None"
+      $grade = -1;
+    }
+    return $grade;
+
+  }
+
+  /**
+   * For a given contact, update the "School Grade" custom field to the given value.
+   */
+  public static function updateContactGrade($contactId, $grade) {
+    $gradeCustomFieldId = CRM_Core_BAO_CustomField::getCustomFieldID('School_grade', 'Student_Progress');
+    civicrm_api3('CustomValue', 'create', [
+      'entity_id' => $contactId,
+      'custom_' . $gradeCustomFieldId => $grade,
+    ]);
+  }
+
 }

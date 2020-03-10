@@ -187,11 +187,27 @@ function namelessprogress_civicrm_ageprogress_alterAgeCalcMethod(&$callback) {
 }
 
 /**
+ * Callback for custom age calculation on a given contact.
+ * @param type $contact
+ * @return type
+ * @see namelessprogress_civicrm_ageprogress_alterAgeCalcMethod()
+ */
+function _namelessprogress_calculateContactAge($contact) {
+  $util = CRM_Namelessprogress_Util::singleton();
+  return $util->calculateAge($contact);
+}
+
+/**
  * Implements hook_civicrm_ageprogress_alterIsDoUpdate().
  *
  * @link https://twomice.github.io/com.joineryhq.ageprogress/
  */
-function namelessprogress_civicrm_ageprogress_alterIsDoUpdate(&$isDoUpdate) {
+function namelessprogress_civicrm_ageprogress_alterIsDoUpdate(&$isDoUpdate, $apiParams) {
+  // Honor the is_force parameter;
+  if (CRM_Utils_Array::value('is_force', $apiParams)) {
+    $isDoUpdate = TRUE;
+    return;
+  }
   //  Define $completedMoveUpFullDate = value of "completedMoveUpFullDate" setting.
   $completedMoveUpFullDate = civicrm_api3('Setting', 'getvalue', [
     'name' => "namelessprogress_completedMoveUpFullDate",
@@ -219,7 +235,91 @@ function namelessprogress_civicrm_ageprogress_alterIsDoUpdate(&$isDoUpdate) {
   }
 }
 
-function _namelessprogress_calculateContactAge($contact) {
+/**
+ * Implements hook_civicrm_custom().
+ *
+ * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_custom/
+ */
+function namelessprogress_civicrm_custom($op, $groupID, $entityID, &$params) {
+  if ($op == 'create' || $op == 'edit') {
+    $yearsAdvancedCustomFieldId = CRM_Core_BAO_CustomField::getCustomFieldID('School_grade_years_advanced', 'Student_Progress');
+    foreach ($params as $param) {
+      // $params will be an array of custom field values. If one of those is
+      // the "years advanced" field, update school grade accordingly.
+      if ($param['custom_field_id'] == $yearsAdvancedCustomFieldId) {
+        // Get the contact.
+        $contact = civicrm_api3('Contact', 'getsingle', ['id' => $entityID]);
+        // Append the new "years advanced" value to the contact, so we don't
+        // have to fetch it later from the database.
+        $contact["custom_{$yearsAdvancedCustomFieldId}"] = $param['value'];
+        // Calculate grade and update the contact.
+        $grade = CRM_Namelessprogress_Util::calculateContactGrade($contact);
+        CRM_Namelessprogress_Util::updateContactGrade($entityID, $grade);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_civicrm_post().
+ *
+ * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_post/
+ */
+function namelessprogress_civicrm_post($op, $objectName, $id, $objectRef) {
+  // On Create or Edit of any Inividual, modify grade based on age.
+  if ($objectName == 'Individual'
+    && (
+      $op == 'create'
+      || $op == 'edit'
+    )
+  ) {
+    $params = $objectRef->toArray();
+    // We'll need to calculate the grade by age.
+    // Get birthdate from params if given. If not given, it's not being changed,
+    // so we'll have nothing to do anyway.
+    if (CRM_Utils_Array::value('birth_date', $params)) {
+      $grade = CRM_Namelessprogress_Util::calculateContactGrade($params);
+      CRM_Namelessprogress_Util::updateContactGrade($id, $grade);
+    }
+  }
+}
+
+/**
+ * Implements hook_civicrm_ageprogress_postUpdate().
+ *
+ * @link https://twomice.github.io/com.joineryhq.ageprogress/
+ */
+function namelessprogress_civicrm_ageprogress_postUpdate($apiParams, &$return) {
+  // Additional counts for return values.
+  $return['namelessprogressGradeProcessedCount'] = 0;
+  $return['namelessprogressGradeUpdateCount'] = 0;
+  $return['namelessprogressGradeErrorCount'] = 0;
+
   $util = CRM_Namelessprogress_Util::singleton();
-  return $util->calculateAge($contact);
+  $gradeCustomFieldId = CRM_Core_BAO_CustomField::getCustomFieldID('School_grade', 'Student_Progress');
+  $yearsAdvancedCustomFieldId = CRM_Core_BAO_CustomField::getCustomFieldID('School_grade_years_advanced', 'Student_Progress');
+  //  For each contact matching the same api parameters:
+  $apiParams['return'][] = 'custom_' . $yearsAdvancedCustomFieldId;
+  $contactGet = civicrm_api3('contact', 'get', $apiParams);
+  foreach ($contactGet['values'] as $contact) {
+    $grade = CRM_Namelessprogress_Util::calculateContactGrade($contact);
+
+    try {
+      CRM_Namelessprogress_Util::updateContactGrade($contact['id'], $grade);
+      $return['namelessprogressGradeUpdateCount']++;
+    }
+    catch (CiviCRM_API3_Exception $e) {
+      $return['namelessprogressGradeErrorCount']++;
+      CRM_Core_Error::debug_log_message('Namelessprogress: encountered API error in CRM_Namelessprogress_Util::updateContactGrade() while updating grade for contact ID=' . $contact['id'] . '; API error message: ' . $e->getMessage());
+    }
+    $return['namelessprogressGradeProcessedCount']++;
+  }
+  //  Now that all contacts have been processed, update the setting "completedMoveUpDate"
+  //  to the value of setting "Move-up date", in the current year (thus our
+  //  "hook_civicrm_ageprogress_alterIsDoUpdate" implementation will know that this
+  //  Move Up Day has been processed in the current year).
+  $dateMoveUpThisYear = CRM_Namelessprogress_Util::getDateMoveUpThisYear();
+  $settingCreate = civicrm_api3('Setting', 'create', [
+    'namelessprogress_completedMoveUpFullDate' => $dateMoveUpThisYear,
+  ]);
 }
