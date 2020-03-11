@@ -148,7 +148,7 @@ function namelessprogress_civicrm_themes(&$themes) {
  */
 function namelessprogress_civicrm_navigationMenu(&$menu) {
   _namelessprogress_get_max_navID($menu, $max_navID);
-  _namelessprogress_civix_insert_navigation_menu($menu, 'Administer/Customize Data and Screens', array(
+  _namelessprogress_civix_insert_navigation_menu($menu, 'Administer/Localization', array(
     'label' => E::ts('Student Progress Settings'),
     'name' => 'Student Progress Settings',
     'url' => 'civicrm/admin/namelessprogress/settings?reset=1',
