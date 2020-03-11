@@ -122,10 +122,12 @@ class CRM_Namelessprogress_Util {
     //  $grade = $grade + contact.schoolGradeYearsAdvanced
     $yearsAdvanced = CRM_Utils_Array::value("custom_{$yearsAdvancedCustomFieldId}", $contact, NULL);
     if (!isset($yearsAdvanced)) {
-      $customValue = civicrm_api3('CustomValue', 'getsingle', [
+      $customValueGet = civicrm_api3('CustomValue', 'get', [
+        'sequential' => TRUE,
         'return' => ["custom_{$yearsAdvancedCustomFieldId}"],
         'entity_id' => CRM_Utils_Array::value("id", $contact, CRM_Utils_Array::value("contact_id", $contact)),
       ]);
+      $customValue = CRM_Utils_Array::value(0, $customValueGet['values'], array());
       $yearsAdvanced = CRM_Utils_Array::value('latest', $customValue, 0);
     }
     $grade += $yearsAdvanced;
