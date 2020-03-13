@@ -4,6 +4,32 @@ require_once 'namelessprogress.civix.php';
 use CRM_Namelessprogress_ExtensionUtil as E;
 
 /**
+ * Implements hook_civicrm_buildForm().
+ *
+ * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_buildForm/
+ */
+function namelessprogress_civicrm_buildForm($formName, &$form = NULL) {
+  if ($formName == 'CRM_Admin_Form_ContactType') {
+    // Alter the description for the 'ageprogress_max_age' max field.
+    $moveupday = civicrm_api3('Setting', 'getvalue', ['name' => "namelessprogress_moveupday"]);
+    $moveUpDayString = date('F j', strtotime("2000-{$moveupday['M']}-{$moveupday['d']}"));
+
+    $schoolcutoffday = civicrm_api3('Setting', 'getvalue', ['name' => "namelessprogress_schoolcutoffday"]);
+    $schoolHCutOffDayString = date('F j', strtotime("2000-{$schoolcutoffday['M']}-{$schoolcutoffday['d']}"));
+
+    $descriptions['ageprogress_max_age'] =
+      E::ts('Contact sub-type is automatically changed on <strong>%1</strong> of each year, based on the contact\'s age calculated on <strong>%2</strong> of that year. (You can change those values in the <a href=%3>Student Progress settings</a>). Contacts calculated to be above this age will be automatically removed from this sub-type.',
+        [
+          '1' => $moveUpDayString,
+          '2' => $schoolHCutOffDayString,
+          '3' => CRM_Utils_System::url('civicrm/admin/namelessprogress/settings'),
+        ]
+      );
+    CRM_Core_Resources::singleton()->addVars('ageprogress', ['descriptions' => $descriptions]);
+  }
+}
+
+/**
  * Implements hook_civicrm_config().
  *
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_config/
