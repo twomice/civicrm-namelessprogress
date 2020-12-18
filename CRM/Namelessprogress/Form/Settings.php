@@ -38,7 +38,7 @@ class CRM_Namelessprogress_Form_Settings extends CRM_Admin_Form_Setting {
     // export descrciptions
     $descriptions = [];
     foreach ($this->_settingsFields as $name => $setting) {
-      $descriptions[$setting['name']] = ts($setting['description']);
+      $descriptions[$setting['name']] = E::ts($setting['description']);
     }
 
     // Set form rules
